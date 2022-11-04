@@ -1,11 +1,14 @@
 import { ApolloCache, ApolloClient, TypedDocumentNode } from "@apollo/client";
-import { OperationDefinitionNode } from "graphql";
+import { isArray } from "@apollo/client/cache/inmemory/helpers";
+import { OperationDefinitionNode, FieldNode } from "graphql";
 
 import produce, { Draft } from "immer";
 
 interface ICacheData {
   [key: string]: unknown;
 }
+interface ICacheListData extends ICacheData, Array<any> {}
+
 type LoggerFunc = {
   (...data: any[]): void;
   (message?: any, ...optionalParams: any[]): void;
@@ -22,13 +25,75 @@ type CacheOptions = {
 
 type InputOptions = Partial<CacheOptions>;
 
-export function logCache(client: ApolloClient<unknown>) {
-  console.log(client.cache.extract());
-}
 const defaultOptions = {
   debug: false,
   logger: console,
 };
+
+export function prependToCache<T extends ICacheData, V, I>(
+  args: Pick<CacheArgs<T, V>, "cache" | "query" | "variables"> & {
+    data: I;
+  }
+) {
+  const selectionName = getSelectionName(args.query);
+
+  updateCache({
+    ...args,
+    updateFn: (draft) => {
+      const array = draft[selectionName] as Array<I>;
+      if (isArray(array)) {
+        array.unshift(args.data);
+      } else {
+        throw new Error(
+          `Cannot prepend to non array, check that selection ${selectionName} is an array`
+        );
+      }
+    },
+  });
+}
+
+export function appendToCache<T extends ICacheData, V, I>(
+  args: Pick<CacheArgs<T, V>, "cache" | "query" | "variables"> & {
+    data: I;
+  }
+) {
+  const selectionName = getSelectionName(args.query);
+
+  updateCache({
+    ...args,
+    updateFn: (draft) => {
+      const array = draft[selectionName] as Array<I>;
+      if (isArray(array)) {
+        array.push(args.data);
+      } else {
+        throw new Error(
+          `Cannot append to non array, check that selection ${selectionName} is an array`
+        );
+      }
+    },
+  });
+}
+
+export type CacheArgs<T extends ICacheData, V> = {
+  cache: ApolloCache<unknown>;
+  query: TypedDocumentNode<T, V>;
+  variables?: V;
+  updateFn: (draft: Draft<NonNullable<T>>) => any;
+  inputOptions?: InputOptions;
+};
+
+function getSelectionName<T extends ICacheData, V>(
+  query: CacheArgs<T, V>["query"]
+) {
+  const operation = query.definitions.find(
+    (x) => x.kind === "OperationDefinition"
+  ) as OperationDefinitionNode;
+  const field = operation.selectionSet.selections.find(
+    (x) => x.kind === "Field"
+  ) as FieldNode;
+  const selectionName = field.name.value;
+  return selectionName;
+}
 
 export function updateCache<T extends ICacheData, V>({
   cache,
@@ -36,13 +101,7 @@ export function updateCache<T extends ICacheData, V>({
   variables,
   updateFn,
   inputOptions,
-}: {
-  cache: ApolloCache<unknown>;
-  query: TypedDocumentNode<T, V>;
-  variables?: V;
-  updateFn: (draft: Draft<NonNullable<T>>) => any;
-  inputOptions?: InputOptions;
-}) {
+}: CacheArgs<T, V>) {
   const options = { ...defaultOptions, ...inputOptions };
   logDebug(options, { query, variables });
 
@@ -75,6 +134,16 @@ function getQueryName<T extends ICacheData, V>(query: TypedDocumentNode<T, V>) {
   ) as OperationDefinitionNode;
   const operationName = operation.name?.value;
   return operationName;
+}
+
+export function cacheToString(cache: ApolloCache<unknown>) {
+  const data = cache.extract();
+  return JSON.stringify(data, null, 2);
+}
+
+// Logging
+export function logCache(client: ApolloClient<unknown>) {
+  console.log(cacheToString(client.cache));
 }
 
 function logDebug(options: CacheOptions, ...rest: any[]) {

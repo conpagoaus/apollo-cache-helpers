@@ -5,7 +5,12 @@ import {
   TypedDocumentNode,
 } from "@apollo/client";
 import { test, expect, beforeEach, vi, describe } from "vitest";
-import { updateCache } from ".";
+import {
+  appendToCache,
+  cacheToString,
+  prependToCache,
+  updateCache,
+} from "./index";
 
 type GetClientByIdQuery = {
   client: {
@@ -23,6 +28,22 @@ const TEST_QUERY = gql`
   }
 ` as TypedDocumentNode<GetClientByIdQuery, GetClientByIdQueryVariables>;
 
+type GetClientListQuery = {
+  clients: {
+    id: string;
+    name: string;
+  }[];
+};
+type GetClientListQueryVariables = {};
+const TEST_LIST_QUERY = gql`
+  query GetClientList {
+    clients {
+      id
+      name
+    }
+  }
+` as TypedDocumentNode<GetClientListQuery, GetClientListQueryVariables>;
+
 let client: ApolloClient<unknown>;
 beforeEach(() => {
   client = new ApolloClient({
@@ -30,32 +51,137 @@ beforeEach(() => {
   });
 });
 
-test("can update existing cache", () => {
-  client.cache.writeQuery({
-    query: TEST_QUERY,
-    variables: { id: "1" },
-    data: {
-      client: {
+describe("cache update", () => {
+  test("does not touch cache when trying to update non existing query", () => {
+    updateCache({
+      cache: client.cache,
+      query: TEST_QUERY,
+      variables: { id: "1" },
+      updateFn: ({ client }) => {
+        client.name = "Jane";
+      },
+    });
+    expect(client.cache.extract()).toEqual({});
+  });
+  test("can update existing cache", () => {
+    client.cache.writeQuery({
+      query: TEST_QUERY,
+      variables: { id: "1" },
+      data: {
+        client: {
+          id: "1",
+          name: "John",
+        },
+      },
+    });
+
+    updateCache({
+      cache: client.cache,
+      query: TEST_QUERY,
+      variables: { id: "1" },
+      updateFn: ({ client }) => {
+        client.name = "Jane";
+      },
+    });
+
+    const result = client.readQuery({
+      query: TEST_QUERY,
+      variables: { id: "1" },
+    });
+    expect(result?.client.name).toBe("Jane");
+  });
+});
+
+describe("cache addition", () => {
+  test("errors if query doesn't have an array as selection set", () => {
+    client.writeQuery({
+      query: TEST_QUERY,
+      variables: { id: "1" },
+      data: {
+        client: {
+          id: "1",
+          name: "John",
+        },
+      },
+    });
+    expect(() => {
+      appendToCache({
+        cache: client.cache,
+        query: TEST_QUERY,
+        variables: { id: "1" },
+        data: {
+          id: "1",
+          name: "John",
+        },
+      });
+    }).toThrow("Cannot append to non array");
+  });
+  test("does not touch cache when trying to append to non existing query", () => {
+    appendToCache({
+      cache: client.cache,
+      query: TEST_LIST_QUERY,
+      variables: {},
+      data: {
         id: "1",
         name: "John",
       },
-    },
+    });
+    expect(cacheToString(client.cache)).toEqual("{}");
   });
+  test("can add to existing cache", () => {
+    client.cache.writeQuery({
+      query: TEST_LIST_QUERY,
+      data: {
+        clients: [
+          {
+            id: "1",
+            name: "John",
+          },
+        ],
+      },
+    });
 
-  updateCache({
-    cache: client.cache,
-    query: TEST_QUERY,
-    variables: { id: "1" },
-    updateFn: ({ client }) => {
-      client.name = "Jane";
-    },
-  });
+    appendToCache({
+      cache: client.cache,
+      query: TEST_LIST_QUERY,
+      data: {
+        id: "2",
+        name: "Jane",
+      },
+    });
 
-  const result = client.readQuery({
-    query: TEST_QUERY,
-    variables: { id: "1" },
+    const result = client.readQuery({
+      query: TEST_LIST_QUERY,
+    });
+    expect(result?.clients.length).toBe(2);
   });
-  expect(result?.client.name).toBe("Jane");
+  test("can prepend to existing cache", () => {
+    client.cache.writeQuery({
+      query: TEST_LIST_QUERY,
+      data: {
+        clients: [
+          {
+            id: "1",
+            name: "John",
+          },
+        ],
+      },
+    });
+
+    prependToCache({
+      cache: client.cache,
+      query: TEST_LIST_QUERY,
+      data: {
+        id: "2",
+        name: "Jane",
+      },
+    });
+
+    const result = client.readQuery({
+      query: TEST_LIST_QUERY,
+    });
+    expect(result?.clients[0].id).toBe("2");
+  });
 });
 
 describe("logging", () => {
@@ -77,7 +203,6 @@ describe("logging", () => {
       },
     });
 
-    expect(client.cache.extract()).toEqual({});
     expect(fakeLogger.warn).toHaveBeenCalled();
   });
   test("can update existing cache with debugging", () => {
