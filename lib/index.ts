@@ -136,7 +136,7 @@ export type CacheArgs<T extends ICacheData, V> = {
   inputOptions?: InputOptions;
 };
 
-export type UpdateArgs<T, V> = CacheArgs<T, V> & {
+export type UpdateArgs<T extends ICacheData, V> = CacheArgs<T, V> & {
   updateFn: (draft: Draft<NonNullable<T>>) => any;
 };
 
