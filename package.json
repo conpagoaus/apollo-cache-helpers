@@ -1,8 +1,10 @@
 {
-  "name": "apollo-cache-helper",
+  "name": "@conpagoaus/apollo-cache-helpers",
   "version": "0.1.0",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
+    "prepublish": "npm run build",
     "build": "tsc",
     "test": "vitest",
     "test:ui": "vitest --ui",
