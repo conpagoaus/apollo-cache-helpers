@@ -209,7 +209,7 @@ describe("cache removal", () => {
       name: "Jane",
     },
   ];
-  test.skip("it can remove entry from query cache only", () => {
+  test("it can remove entry from query cache only", () => {
     client.cache.writeQuery({
       query: TEST_LIST_QUERY,
       data: {
