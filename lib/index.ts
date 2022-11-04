@@ -58,7 +58,7 @@ type removeCacheArgs<
   I extends {
     id: string;
   }
-> = Pick<CacheArgs<T, V>, "cache" | "query" | "variables"> & {
+> = CacheArgs<T, V> & {
   data: I;
   removeNormalized?: boolean | undefined;
 };
@@ -86,7 +86,7 @@ function removeArrayCacheElement<
 }
 
 export function prependToCache<T extends ICacheData, V, I>(
-  args: Pick<CacheArgs<T, V>, "cache" | "query" | "variables"> & {
+  args: CacheArgs<T, V> & {
     data: I;
   }
 ) {
@@ -108,7 +108,7 @@ export function prependToCache<T extends ICacheData, V, I>(
 }
 
 export function appendToCache<T extends ICacheData, V, I>(
-  args: Pick<CacheArgs<T, V>, "cache" | "query" | "variables"> & {
+  args: CacheArgs<T, V> & {
     data: I;
   }
 ) {
@@ -133,8 +133,11 @@ export type CacheArgs<T extends ICacheData, V> = {
   cache: ApolloCache<unknown>;
   query: TypedDocumentNode<T, V>;
   variables?: V;
-  updateFn: (draft: Draft<NonNullable<T>>) => any;
   inputOptions?: InputOptions;
+};
+
+export type UpdateArgs<T, V> = CacheArgs<T, V> & {
+  updateFn: (draft: Draft<NonNullable<T>>) => any;
 };
 
 function getSelectionName<T extends ICacheData, V>(
@@ -156,7 +159,7 @@ export function updateCache<T extends ICacheData, V>({
   variables,
   updateFn,
   inputOptions,
-}: CacheArgs<T, V>) {
+}: UpdateArgs<T, V>) {
   const options = { ...defaultOptions, ...inputOptions };
   logDebug(options, { query, variables });
 

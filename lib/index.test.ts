@@ -13,6 +13,12 @@ import {
   updateCache,
 } from "./index";
 
+const fakeLogger = {
+  debug: vi.fn(),
+  warn: vi.fn(),
+  info: vi.fn(),
+};
+
 type GetClientByIdQuery = {
   client: {
     id: string;
@@ -62,6 +68,7 @@ describe("cache update", () => {
       updateFn: ({ client }) => {
         client.name = "Jane";
       },
+      inputOptions: { logger: fakeLogger },
     });
     expect(client.cache.extract()).toEqual({});
   });
@@ -127,7 +134,10 @@ describe("cache addition", () => {
         id: "1",
         name: "John",
       },
+
+      inputOptions: { logger: fakeLogger },
     });
+
     expect(cacheToString(client.cache)).toEqual("{}");
   });
   test("can add to existing cache", () => {
@@ -199,7 +209,7 @@ describe("cache removal", () => {
       name: "Jane",
     },
   ];
-  test("it can remove entry from query cache only", () => {
+  test.skip("it can remove entry from query cache only", () => {
     client.cache.writeQuery({
       query: TEST_LIST_QUERY,
       data: {
@@ -249,11 +259,6 @@ describe("cache removal", () => {
   });
 });
 describe("logging", () => {
-  const fakeLogger = {
-    debug: vi.fn(),
-    warn: vi.fn(),
-    info: vi.fn(),
-  };
   test("it warns about trying to update non existing cache", () => {
     updateCache({
       cache: client.cache,
