@@ -8,7 +8,9 @@ import { test, expect, beforeEach, vi, describe } from "vitest";
 import {
   appendToCache,
   cacheToString,
+  logCache,
   prependToCache,
+  removeFromCache,
   updateCache,
 } from "./index";
 
@@ -30,6 +32,7 @@ const TEST_QUERY = gql`
 
 type GetClientListQuery = {
   clients: {
+    __typename?: "Client";
     id: string;
     name: string;
   }[];
@@ -184,6 +187,68 @@ describe("cache addition", () => {
   });
 });
 
+describe("cache removal", () => {
+  const testClients = [
+    {
+      __typename: "Client" as const,
+      id: "1",
+      name: "John",
+    },
+    {
+      __typename: "Client" as const,
+      id: "2",
+      name: "Jane",
+    },
+  ];
+  test("it can remove entry from query cache only", () => {
+    client.cache.writeQuery({
+      query: TEST_LIST_QUERY,
+      data: {
+        clients: testClients,
+      },
+    });
+
+    removeFromCache({
+      cache: client.cache,
+      query: TEST_LIST_QUERY,
+      data: {
+        id: testClients[0].id,
+      },
+      removeNormalized: false,
+    });
+
+    const result = client.readQuery({
+      query: TEST_LIST_QUERY,
+    });
+    expect(result?.clients.length).toBe(1);
+    expect(result?.clients[0].id).toEqual(testClients[1].id);
+    expect((client.cache.extract() as any)["Client:1"]).toBeDefined();
+  });
+
+  test("removes entry from normalized and query cache", () => {
+    client.cache.writeQuery({
+      query: TEST_LIST_QUERY,
+      data: {
+        clients: testClients,
+      },
+    });
+
+    removeFromCache({
+      cache: client.cache,
+      query: TEST_LIST_QUERY,
+      data: {
+        id: testClients[0].id,
+      },
+      // removeNormalized: true,
+    });
+
+    const result = client.readQuery({
+      query: TEST_LIST_QUERY,
+    });
+    expect(result?.clients.length).toBe(1);
+    expect((client.cache.extract() as any)["Client:1"]).toBeUndefined();
+  });
+});
 describe("logging", () => {
   const fakeLogger = {
     debug: vi.fn(),

@@ -30,6 +30,62 @@ const defaultOptions = {
   logger: console,
 };
 
+export function removeFromCache<
+  T extends ICacheData,
+  V,
+  I extends { id: string }
+>(args: removeCacheArgs<T, V, I>) {
+  const selectionName = getSelectionName(args.query);
+
+  updateCache({
+    ...args,
+    updateFn: (draft) => {
+      const candidate = draft[selectionName];
+
+      if (isArray(candidate)) {
+        removeArrayCacheElement(candidate as Array<I>, args);
+      } else {
+        throw new Error(
+          `Cannot remove from non array, check that selection ${selectionName} is an array`
+        );
+      }
+    },
+  });
+}
+
+type removeCacheArgs<
+  T extends ICacheData,
+  V,
+  I extends {
+    id: string;
+  }
+> = Pick<CacheArgs<T, V>, "cache" | "query" | "variables"> & {
+  data: I;
+  removeNormalized?: boolean | undefined;
+};
+
+function removeArrayCacheElement<
+  T extends ICacheData,
+  V,
+  I extends { id: string }
+>(candidate: I[], args: removeCacheArgs<T, V, I>) {
+  const defaultOptions = {
+    removeNormalized: true,
+  };
+  const options: removeCacheArgs<T, V, I> = { ...defaultOptions, ...args };
+
+  const { data, cache, removeNormalized } = options;
+
+  const index = candidate.findIndex((x) => x.id === data.id);
+  if (index > -1) {
+    const removedEntry = candidate.splice(index, 1)[0];
+    if (removeNormalized) {
+      const idToRemove = cache.identify(removedEntry);
+      cache.evict({ id: idToRemove });
+    }
+  }
+}
+
 export function prependToCache<T extends ICacheData, V, I>(
   args: Pick<CacheArgs<T, V>, "cache" | "query" | "variables"> & {
     data: I;
