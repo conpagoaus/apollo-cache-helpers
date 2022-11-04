@@ -7,7 +7,6 @@ import produce, { Draft } from "immer";
 interface ICacheData {
   [key: string]: unknown;
 }
-interface ICacheListData extends ICacheData, Array<any> {}
 
 type LoggerFunc = {
   (...data: any[]): void;

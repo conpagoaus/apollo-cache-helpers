@@ -8,7 +8,6 @@ import { test, expect, beforeEach, vi, describe } from "vitest";
 import {
   appendToCache,
   cacheToString,
-  logCache,
   prependToCache,
   removeFromCache,
   updateCache,
