@@ -4,7 +4,7 @@ import {
   InMemoryCache,
   TypedDocumentNode,
 } from "@apollo/client";
-import { test, expect, beforeEach, vi, describe } from "vitest";
+import { test, expect, beforeEach, vi, describe, it } from "vitest";
 import {
   appendToCache,
   cacheToString,
@@ -12,6 +12,10 @@ import {
   removeFromCache,
   updateCache,
 } from "./index";
+import {
+  GetClientByIdDocument,
+  GetClientListDocument,
+} from "../generated-operations";
 
 const fakeLogger = {
   debug: vi.fn(),
@@ -297,5 +301,65 @@ describe("logging", () => {
     });
 
     expect(fakeLogger.debug).toHaveBeenCalled();
+  });
+});
+describe("working with graphql-codegen", () => {
+  it("works with variables", () => {
+    client.cache.writeQuery({
+      query: GetClientByIdDocument,
+      variables: { id: "1" },
+      data: {
+        client: {
+          id: "1",
+          name: "John",
+        },
+      },
+    });
+
+    updateCache({
+      cache: client.cache,
+      query: GetClientByIdDocument,
+      variables: { id: "1" },
+      updateFn: ({ client }) => {
+        if (client) {
+          client.name = "Jane";
+        }
+      },
+    });
+
+    const result = client.readQuery({
+      query: GetClientByIdDocument,
+      variables: { id: "1" },
+    });
+    expect(result?.client?.name).toEqual("Jane");
+  });
+  it("works without variables", () => {
+    client.cache.writeQuery({
+      query: GetClientListDocument,
+      data: {
+        clients: [
+          {
+            id: "1",
+            name: "John",
+          },
+        ],
+      },
+    });
+
+    updateCache({
+      cache: client.cache,
+      query: GetClientListDocument,
+      updateFn: ({ clients }) => {
+        clients?.push({
+          id: "2",
+          name: "Jane",
+        });
+      },
+    });
+
+    const result = client.readQuery({
+      query: GetClientListDocument,
+    });
+    expect(result?.clients?.length).toEqual(2);
   });
 });
