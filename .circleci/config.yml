@@ -19,9 +19,9 @@ jobs:
           command: npm run build
           name: Build app
       - persist_to_workspace:
-          root: ~/project/dist
+          root: ~/project/
           paths:
-            - .
+            - ./dist
 workflows:
   build_and_test:
     jobs:
