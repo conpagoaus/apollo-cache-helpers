@@ -1,4 +1,8 @@
-import { ApolloCache, ApolloClient, TypedDocumentNode } from "@apollo/client";
+import {
+  ApolloCache,
+  ApolloClient,
+  TypedDocumentNode,
+} from "@apollo/client/core";
 import { isArray } from "@apollo/client/cache/inmemory/helpers";
 import { OperationDefinitionNode, FieldNode } from "graphql";
 

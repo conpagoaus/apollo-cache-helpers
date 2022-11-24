@@ -3,7 +3,7 @@ import {
   gql,
   InMemoryCache,
   TypedDocumentNode,
-} from "@apollo/client";
+} from "@apollo/client/core";
 import { test, expect, beforeEach, vi, describe, it } from "vitest";
 import {
   appendToCache,
