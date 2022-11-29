@@ -4,7 +4,7 @@ import {
   InMemoryCache,
   TypedDocumentNode,
 } from "@apollo/client/core";
-import { test, expect, beforeEach, vi, describe, it } from "vitest";
+import { test, expect, beforeEach, vi, describe } from "vitest";
 import {
   appendToCache,
   cacheToString,
@@ -304,7 +304,7 @@ describe("logging", () => {
   });
 });
 describe("working with graphql-codegen", () => {
-  it("works with variables", () => {
+  test("works with variables", () => {
     client.cache.writeQuery({
       query: GetClientByIdDocument,
       variables: { id: "1" },
@@ -333,7 +333,7 @@ describe("working with graphql-codegen", () => {
     });
     expect(result?.client?.name).toEqual("Jane");
   });
-  it("works without variables", () => {
+  test("works without variables", () => {
     client.cache.writeQuery({
       query: GetClientListDocument,
       data: {
