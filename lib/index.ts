@@ -7,6 +7,7 @@ import { isArray } from "@apollo/client/cache/inmemory/helpers";
 import { OperationDefinitionNode, FieldNode } from "graphql";
 
 import produce, { Draft } from "immer";
+import getNestedProperty from "./prop_getter";
 
 interface ICacheData {
   [key: string]: unknown;
@@ -38,12 +39,12 @@ export function removeFromCache<
   V,
   I extends { id: string }
 >(args: removeCacheArgs<T, V, I>) {
-  const selectionName = getSelectionName(args.query);
+  const selectionName = args.selectionName || getSelectionName(args.query);
 
   updateCache({
     ...args,
     updateFn: (draft) => {
-      const candidate = draft[selectionName];
+      const candidate = getNestedProperty(draft, selectionName);
 
       if (isArray(candidate)) {
         removeArrayCacheElement(candidate as Array<I>, args);
@@ -65,6 +66,7 @@ type removeCacheArgs<
 > = CacheArgs<T, V> & {
   data: I;
   removeNormalized?: boolean | undefined;
+  selectionName?: string;
 };
 
 function removeArrayCacheElement<
@@ -114,14 +116,16 @@ export function prependToCache<T extends ICacheData, V, I>(
 export function appendToCache<T extends ICacheData, V, I>(
   args: CacheArgs<T, V> & {
     data: I;
+    selectionName?: string;
   }
 ) {
-  const selectionName = getSelectionName(args.query);
+  const selectionName = args.selectionName || getSelectionName(args.query);
 
   updateCache({
     ...args,
     updateFn: (draft) => {
-      const array = draft[selectionName] as Array<I>;
+      const array = getNestedProperty(draft, selectionName) as Array<I>;
+
       if (isArray(array)) {
         array.push(args.data);
       } else {

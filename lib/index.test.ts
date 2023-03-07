@@ -56,6 +56,30 @@ const TEST_LIST_QUERY = gql`
   }
 ` as TypedDocumentNode<GetClientListQuery, GetClientListQueryVariables>;
 
+type GetClientListWithEdgesQuery = {
+  clients: {
+    __typename?: "ClientRoot";
+    edges: {
+      __typename?: "Client";
+      id: string;
+      name: string;
+    }[];
+  };
+};
+const TEST_LIST_QUERY_WITH_EDGES = gql`
+  query GetClientList {
+    clients {
+      edges {
+        id
+        name
+      }
+    }
+  }
+` as TypedDocumentNode<
+  GetClientListWithEdgesQuery,
+  GetClientListQueryVariables
+>;
+
 let client: ApolloClient<unknown>;
 beforeEach(() => {
   client = new ApolloClient({
@@ -198,6 +222,36 @@ describe("cache addition", () => {
     });
     expect(result?.clients[0].id).toBe("2");
   });
+  test("can append with custom selection name", () => {
+    client.cache.writeQuery({
+      query: TEST_LIST_QUERY_WITH_EDGES,
+      data: {
+        clients: {
+          edges: [
+            {
+              id: "1",
+              name: "John",
+            },
+          ],
+        },
+      },
+    });
+
+    appendToCache({
+      cache: client.cache,
+      query: TEST_LIST_QUERY_WITH_EDGES,
+      data: {
+        id: "2",
+        name: "Jane",
+      },
+      selectionName: "clients.edges",
+    });
+
+    const result = client.readQuery({
+      query: TEST_LIST_QUERY_WITH_EDGES,
+    });
+    expect(result?.clients.edges.length).toBe(2);
+  });
 });
 
 describe("cache removal", () => {
@@ -259,6 +313,31 @@ describe("cache removal", () => {
       query: TEST_LIST_QUERY,
     });
     expect(result?.clients.length).toBe(1);
+    expect((client.cache.extract() as any)["Client:1"]).toBeUndefined();
+  });
+  test("removes entry from normalized and query cache with custom selection name", () => {
+    client.cache.writeQuery({
+      query: TEST_LIST_QUERY_WITH_EDGES,
+      data: {
+        clients: {
+          edges: testClients,
+        },
+      },
+    });
+
+    removeFromCache({
+      cache: client.cache,
+      query: TEST_LIST_QUERY_WITH_EDGES,
+      data: {
+        id: testClients[0].id,
+      },
+      selectionName: "clients.edges",
+    });
+
+    const result = client.readQuery({
+      query: TEST_LIST_QUERY_WITH_EDGES,
+    });
+    expect(result?.clients.edges.length).toBe(1);
     expect((client.cache.extract() as any)["Client:1"]).toBeUndefined();
   });
 });
