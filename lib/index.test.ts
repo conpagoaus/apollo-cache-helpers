@@ -60,9 +60,13 @@ type GetClientListWithEdgesQuery = {
   clients: {
     __typename?: "ClientRoot";
     edges: {
-      __typename?: "Client";
-      id: string;
-      name: string;
+      __typename?: "ClientEdge";
+      cursor: string;
+      node: {
+        __typename?: "Client";
+        id: string;
+        name: string;
+      };
     }[];
   };
 };
@@ -70,8 +74,11 @@ const TEST_LIST_QUERY_WITH_EDGES = gql`
   query GetClientList {
     clients {
       edges {
-        id
-        name
+        node {
+          id
+          name
+        }
+        cursor
       }
     }
   }
@@ -229,8 +236,11 @@ describe("cache addition", () => {
         clients: {
           edges: [
             {
-              id: "1",
-              name: "John",
+              cursor: "1",
+              node: {
+                id: "1",
+                name: "John",
+              },
             },
           ],
         },
@@ -241,8 +251,11 @@ describe("cache addition", () => {
       cache: client.cache,
       query: TEST_LIST_QUERY_WITH_EDGES,
       data: {
-        id: "2",
-        name: "Jane",
+        node: {
+          id: "2",
+          name: "Jane",
+        },
+        cursor: "2",
       },
       selectionName: "clients.edges",
     });
@@ -320,7 +333,10 @@ describe("cache removal", () => {
       query: TEST_LIST_QUERY_WITH_EDGES,
       data: {
         clients: {
-          edges: testClients,
+          edges: testClients.map((x) => ({
+            cursor: x.id,
+            node: x,
+          })),
         },
       },
     });
@@ -331,7 +347,7 @@ describe("cache removal", () => {
       data: {
         id: testClients[0].id,
       },
-      // identityPath: "node",
+      objectToRemovePath: "node",
       selectionName: "clients.edges",
     });
 
