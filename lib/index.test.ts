@@ -331,6 +331,7 @@ describe("cache removal", () => {
       data: {
         id: testClients[0].id,
       },
+      // identityPath: "node",
       selectionName: "clients.edges",
     });
 

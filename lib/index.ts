@@ -7,7 +7,7 @@ import { isArray } from "@apollo/client/cache/inmemory/helpers";
 import { OperationDefinitionNode, FieldNode } from "graphql";
 
 import produce, { Draft } from "immer";
-import getNestedProperty from "./prop_getter";
+import getNestedProperty from "lodash.get";
 
 interface ICacheData {
   [key: string]: unknown;
