@@ -10,7 +10,8 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "generate": "graphql-codegen --config codegen.yml",
-    "release": "standard-version"
+    "release": "standard-version",
+    "publish": "git push --follow-tags origin main && npm publish"
   },
   "devDependencies": {
     "@apollo/client": "^3.7.1",
