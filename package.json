@@ -1,8 +1,8 @@
 {
   "name": "@conpagoaus/apollo-cache-helpers",
   "version": "0.2.3",
-  "main": "dist/types/index.js",
-  "types": "dist/types/index.d.ts",
+  "main": "dist/lib/index.js",
+  "types": "dist/lib/index.d.ts",
   "scripts": {
     "prepublish": "npm run build",
     "build": "tsc",
