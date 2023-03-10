@@ -7,8 +7,15 @@ import { isArray } from "@apollo/client/cache/inmemory/helpers";
 import { OperationDefinitionNode, FieldNode } from "graphql";
 
 import produce, { Draft } from "immer";
-import getNestedProperty from "./prop_getter";
+import get from "lodash.get";
 
+const getNestedProperty = (obj: any, path: string | undefined) => {
+  // when path is not provided defalt to object
+  if (!path) {
+    return obj;
+  }
+  return get(obj, path);
+};
 interface ICacheData {
   [key: string]: unknown;
 }
@@ -67,6 +74,7 @@ type removeCacheArgs<
   data: I;
   removeNormalized?: boolean | undefined;
   selectionName?: string;
+  objectToRemovePath?: string;
 };
 
 function removeArrayCacheElement<
@@ -79,13 +87,22 @@ function removeArrayCacheElement<
   };
   const options: removeCacheArgs<T, V, I> = { ...defaultOptions, ...args };
 
-  const { data, cache, removeNormalized } = options;
+  const { data, cache, removeNormalized, objectToRemovePath } = options;
 
-  const index = candidate.findIndex((x) => x.id === data.id);
+  const idToFindPath = objectToRemovePath ? objectToRemovePath + ".id" : "id";
+
+  const index = candidate.findIndex(
+    (x) => getNestedProperty(x, idToFindPath) === data.id
+  );
   if (index > -1) {
     const removedEntry = candidate.splice(index, 1)[0];
     if (removeNormalized) {
-      const idToRemove = cache.identify(removedEntry);
+      const objectToSearchFor = getNestedProperty(
+        removedEntry,
+        objectToRemovePath
+      );
+
+      const idToRemove = cache.identify(objectToSearchFor);
       cache.evict({ id: idToRemove });
     }
   }
