@@ -15,8 +15,15 @@ export type Scalars = {
 
 export type Client = {
   __typename?: 'Client';
+  edges?: Maybe<Array<Maybe<ClientEdge>>>;
   id: Scalars['ID'];
   name: Scalars['String'];
+};
+
+export type ClientEdge = {
+  __typename?: 'ClientEdge';
+  cursor: Scalars['String'];
+  node: Client;
 };
 
 export type Query = {
@@ -42,6 +49,12 @@ export type GetClientListQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type GetClientListQuery = { __typename?: 'Query', clients?: Array<{ __typename?: 'Client', id: string, name: string } | null> | null };
 
+export type GetClientListPaginateQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetClientListPaginateQuery = { __typename?: 'Query', clients?: Array<{ __typename?: 'Client', edges?: Array<{ __typename?: 'ClientEdge', cursor: string, node: { __typename?: 'Client', id: string, name: string } } | null> | null } | null> | null };
+
 
 export const GetClientByIdDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetClientById"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"client"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<GetClientByIdQuery, GetClientByIdQueryVariables>;
 export const GetClientListDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetClientList"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"clients"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<GetClientListQuery, GetClientListQueryVariables>;
+export const GetClientListPaginateDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetClientListPaginate"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"clients"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"cursor"}}]}}]}}]}}]} as unknown as DocumentNode<GetClientListPaginateQuery, GetClientListPaginateQueryVariables>;

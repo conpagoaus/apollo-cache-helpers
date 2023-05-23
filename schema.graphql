@@ -1,8 +1,15 @@
 type Client {
   id: ID!
   name: String!
+  edges: [ClientEdge]
 }
+
 type Query {
   client(id: ID!): Client
   clients: [Client]
+}
+
+type ClientEdge {
+  node: Client!
+  cursor: String!
 }
