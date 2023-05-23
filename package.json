@@ -3,6 +3,12 @@
   "version": "0.2.6",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
+  "author": "Conpago Devs",
+  "license": "UNLICENSED",
+  "repository": "https://github.com/conpagoaus/apollo-cache-helpers.git",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "prepublish": "npm run build",
     "build": "tsc",
@@ -11,7 +17,7 @@
     "test:run": "vitest run",
     "generate": "graphql-codegen",
     "release": "standard-version",
-    "publish": "git push --follow-tags origin main && npm publish"
+    "publish": "npm publish --access restricted"
   },
   "devDependencies": {
     "@apollo/client": "^3.7.14",
