@@ -71,7 +71,7 @@ type GetClientListWithEdgesQuery = {
   };
 };
 const TEST_LIST_QUERY_WITH_EDGES = gql`
-  query GetClientList {
+  query GetClientListPaginate {
     clients {
       edges {
         node {

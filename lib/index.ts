@@ -6,7 +6,7 @@ import {
 import { isArray } from "@apollo/client/cache/inmemory/helpers";
 import { OperationDefinitionNode, FieldNode } from "graphql";
 
-import produce, { Draft } from "immer";
+import { produce, Draft } from "immer";
 import get from "lodash.get";
 
 const getNestedProperty = (obj: any, path: string | undefined) => {
@@ -92,7 +92,7 @@ function removeArrayCacheElement<
   const idToFindPath = objectToRemovePath ? objectToRemovePath + ".id" : "id";
 
   const index = candidate.findIndex(
-    (x) => getNestedProperty(x, idToFindPath) === data.id
+    (x: any) => getNestedProperty(x, idToFindPath) === data.id
   );
   if (index > -1) {
     const removedEntry = candidate.splice(index, 1)[0];
@@ -169,10 +169,10 @@ function getSelectionName<T extends ICacheData, V>(
   query: CacheArgs<T, V>["query"]
 ) {
   const operation = query.definitions.find(
-    (x) => x.kind === "OperationDefinition"
+    (x: { kind: string }) => x.kind === "OperationDefinition"
   ) as OperationDefinitionNode;
   const field = operation.selectionSet.selections.find(
-    (x) => x.kind === "Field"
+    (x: { kind: string }) => x.kind === "Field"
   ) as FieldNode;
   const selectionName = field.name.value;
   return selectionName;
@@ -213,7 +213,7 @@ export function updateCache<T extends ICacheData, V>({
 
 function getQueryName<T extends ICacheData, V>(query: TypedDocumentNode<T, V>) {
   const operation = query.definitions.find(
-    (def) => def.kind === "OperationDefinition"
+    (def: { kind: string }) => def.kind === "OperationDefinition"
   ) as OperationDefinitionNode;
   const operationName = operation.name?.value;
   return operationName;
